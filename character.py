@@ -7,6 +7,8 @@ class Player:
         self.HP = self.FHP = self.stats[4] * 3
         self.stats += CommonStats
         self.stats += [self.HP, self.FHP]
+        self.mulAttack = 1
+        self.skillName = ""
     def levelup(self):
         self.stats[1] += 3
         self.stats[2] += 1
@@ -15,10 +17,18 @@ class Player:
         self.stats[5] += 1
         self.stats[6] = 0
         self.stats[8] = self.stats[4] * 3
-    def skill(self, skillnum):
-        WarriorSkill_1 = "파동권"
-        WarriorSkill_2 = "승룡권"
-        WarriorSkill_3 = "용권선풍각"
+    def skill_00(self):
+        self.skillName = ""
+        self.skillDuration = 0
+        self.skillCooldown = 0
+        self.mulAttack = 1
+    def skill_01(self):
+        self.skillName = "멀티어택"
+        self.skillDuration = 3
+        self.skillCooldown = 3
+        self.mulAttack = 2
+        combatSkill_02 = "승룡권"
+        combatSkill_03 = "용권선풍각"
 
 class NoClass:
     stats = ["NoClass", 0, 0, 0, 0, 0, 0 ,0, 0]
