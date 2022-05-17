@@ -22,6 +22,8 @@ class Player:
 
 class NoClass:
     stats = ["NoClass", 0, 0, 0, 0, 0, 0 ,0, 0]
+    def levelup(self):
+        pass
 
 class Warrior:
     CLASS = "Warrior"
