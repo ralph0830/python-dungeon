@@ -17,24 +17,22 @@ class CharWindowClass(QWidget, widgetchar_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.initUI()
+        
+    def initUI(self):
         self.btn_warrior.clicked.connect(lambda: self.select_class("Warrior"))
-        # self.btn_mase.clicked.connect(lambda: self.select_class("Mase"))
-        # self.btn_assasin.clicked.connect(lambda: self.select_class("Assasin"))
+        self.btn_mase.clicked.connect(lambda: self.select_class("Mase"))
+        self.btn_assasin.clicked.connect(lambda: self.select_class("Assasin"))
+        myWindow.txtLog.setPlainText("캐릭터를 선택해주세요.")
 
     def select_class(self, selclass):
         global player
         if selclass == "Warrior":
-            player = Player()
+            player = Warrior()
         elif selclass == "Mase":
             player = Mase()
         else:
             player = Assasin()
-        strclass = str(f'CLASS = {player.stats[0]}\n'
-                              f'LEVEL = {player.stats[5]}\nHP = {player.stats[7]}\n'
-                              f'STR = {player.stats[1]}\nINT = {player.stats[2]}\n'
-                              f'DEX = {player.stats[3]}\nVIT = {player.stats[4]}\n'
-                              f'EXP = {player.stats[6]}\nFHP = {player.stats[8]}\n')
-        # myWindow.txtLog.setPlainText(strclass)
         myWindow.txtLog.setPlainText(player.stats[0]+" 선택!")
         CharWindow.close()
         myWindow.show()
@@ -52,6 +50,8 @@ class WindowClass(QMainWindow, form_class):    #화면을 띄우는데 사용되
     def initUI(self):
         self.update_stats()
         self.txtLog.setAcceptRichText(True)
+        self.btn_move.setEnabled(False)
+        self.btn_item.setEnabled(False)
         self.btn_move.clicked.connect(self.moveEncounter)
         self.btn_item.clicked.connect(self.itemUse)
         self.progressBar_HP.setMinimum(0)
@@ -59,6 +59,8 @@ class WindowClass(QMainWindow, form_class):    #화면을 띄우는데 사용되
     
     def openCharwindow(self):
         self.btn_Charselect.setEnabled(False)
+        self.btn_move.setEnabled(True)
+        self.btn_item.setEnabled(True)
         myWindow.hide()
         CharWindow.show()
 
@@ -74,52 +76,43 @@ class WindowClass(QMainWindow, form_class):    #화면을 띄우는데 사용되
         self.txtLog.append("<span style='color:green'>"+self.stage.event_msg+"</span>")
 
     def moveEncounter(self):
-        if isinstance(player, NoClass) == True:
-            self.btn_Charselect.setEnabled(False)
-            myWindow.hide()
-            CharWindow.show()
-        else:
+        self.txtLog.append("\n이동합니다.")
+        dice_encounter = randint(0, 1)
+        if dice_encounter == 1:
+            CombatWindow.show()
+            self.hide()
+            CombatWindow.combat_start(True)
+            CombatWindow.spawning_monster()
+            CombatWindow.btn_reset()
             CombatWindow.update()
-            self.txtLog.append("\n이동합니다.")
-            dice_encounter = randint(0, 1)
-            if dice_encounter == 1:
-                CombatWindow.show()
-                self.hide()
-                CombatWindow.combat_start(True)
-                CombatWindow.spawning_monster()
-            else:
-                player.stats[7] += 2
-                if player.stats[7] >= player.stats[8]:
-                    player.stats[7] = player.stats[8]
-                self.txtLog.append("아무것도 보이지 않아서 앉아서 휴식합니다.\n체력을 2 회복합니다. "+ str(player.stats[7])+" / "+str(player.stats[8]))
+        else:
+            player.stats[7] += 2
+            if player.stats[7] >= player.stats[8]:
+                player.stats[7] = player.stats[8]
+            self.update_stats()
 
     def printTextFunction(self):
         print(self.lbl_Stat.text())
     
     def itemUse(self):
-        if isinstance(player, NoClass) == True:
-            self.btn_Charselect.setEnabled(False)
-            myWindow.hide()
-            CharWindow.show()
+        dice_encounter = randint(0, 1)
+        if dice_encounter == 1:
+            
+            self.txtLog.append("물약을 사용하려 했으나 적이 공격해 옵니다!!")
+            CombatWindow.txtCombatLog.append("물약을 사용하려 했으나 적이 공격해 옵니다!!")
+            
+            CombatWindow.show()
+            self.hide()
+            global combat_running
+            CombatWindow.combat_start(True)
+            CombatWindow.spawning_monster()
         else:
-            dice_encounter = randint(0, 1)
-            if dice_encounter == 1:
-                
-                self.txtLog.append("물약을 사용하려 했으나 적이 공격해 옵니다!!")
-                CombatWindow.txtCombatLog.append("물약을 사용하려 했으나 적이 공격해 옵니다!!")
-                
-                CombatWindow.show()
-                self.hide()
-                global combat_running
-                CombatWindow.combat_start(True)
-                CombatWindow.spawning_monster()
+            self.txtLog.append("물약을 사용하여, 체력을 회복합니다.\n")
+            if player.stats[7] >= player.stats[8]:
+                    player.stats[7] = player.stats[8]
             else:
-                self.txtLog.append("물약을 사용하여, 체력을 회복합니다.\n")
-                if player.stats[7] >= player.stats[8]:
-                        player.stats[7] = player.stats[8]
-                else:
-                    player.stats[7] += 5
-                self.update_stats()
+                player.stats[7] += 5
+            self.update_stats()
 
 class CombatWindowClass(QWidget, widgetcombat_class):
     monster_hp = 0
@@ -137,14 +130,15 @@ class CombatWindowClass(QWidget, widgetcombat_class):
     def initUI(self):
         self.txtCombatLog.setAcceptRichText(True)
         self.btn_CombatAttack.clicked.connect(self.combat_attack)
-        self.btn_CombatSkill1.clicked.connect(self.combat_skill1)
-        self.btn_CombatSkill2.clicked.connect(self.combat_skill2)
-        self.btn_CombatSkill3.clicked.connect(self.combat_skill3)
+        self.btn_CombatSkill1.clicked.connect(lambda: self.combat_skill(self.btn_CombatSkill1))
+        self.btn_CombatSkill2.clicked.connect(lambda: self.combat_skill(self.btn_CombatSkill2))
+        self.btn_CombatSkill3.clicked.connect(lambda: self.combat_skill(self.btn_CombatSkill3))
         self.btn_CombatFlee.clicked.connect(self.combat_flee)
         self.bar_monsterhp.setMinimum(0)
         self.bar_playerhp.setMinimum(0)
         self.bar_monsterhp.setMaximum(self.monster_init_hp)        # Monster HP
         self.bar_playerhp.setMaximum(player.stats[8])     # Player HP
+        self.btn_reset()
     
     def combat_start(self, CombatRunning=False):
         if CombatRunning == True:
@@ -186,13 +180,6 @@ class CombatWindowClass(QWidget, widgetcombat_class):
         CombatWindow.txtCombatLog.append(msgSpawning)
         self.update()
 
-    def update(self):
-        self.lbl_monsterhp.setText(str(self.monster_hp)+"/"+str(self.monster_init_hp))
-        self.lbl_playerhp.setText(str(player.stats[7])+"/"+str(player.stats[8]))
-        self.bar_monsterhp.setValue(self.monster_hp)
-        self.bar_monsterhp.setValue(self.monster_hp)
-        self.bar_playerhp.setValue(player.stats[7])
-
     def combat_attack(self):
         for x in range(0, player.mulAttack):
             player_damage = randint(int(player.stats[1] / 2 / 5), int(player.stats[1]/5))
@@ -202,8 +189,6 @@ class CombatWindowClass(QWidget, widgetcombat_class):
             combatmsg1 = f"<span style='color: blue'><b>{str(player_damage)}</span></b>의 피해를 입힙니다!!({player.skillName})"
             self.txtCombatLog.append(combatmsg1)
             self.update()
-            if self.monster_hp <= 0:
-                self.monster_num_sub()
     
     def monster_num_sub(self):
         self.monster_num -= 1
@@ -213,38 +198,33 @@ class CombatWindowClass(QWidget, widgetcombat_class):
         else:
             self.spawning_monster()
 
-    def combat_skill1(self):
+    def combat_skill(self, btn):
+        player.skill_01()
         self.skill_timer = QTimer()
         self.skill_timer.start()
         self.skill_timer.setInterval(1000)
         self.skill_timer.timeout.connect(self.skillTimer)
-        player.skill_01()
-        self.txtCombatLog.append(f"<span style='color: green'>{player.skillName}</span> 시전합니다!!")
-        self.btn_CombatSkill1.setText("활성화!!")
+        self.skill_run(player.skillType, btn)
 
-    def combat_skill2(self):
-        self.skill_timer = QTimer()
-        self.skill_timer.start()
-        self.skill_timer.setInterval(1000)
-        self.skill_timer.timeout.connect(self.skillTimer)
-        player.skill_01()
-        self.txtCombatLog.append(f"<span style='color: green'>{player.skillName}</span> 시전합니다!!")
-        self.btn_CombatSkill1.setText("활성화!!")
+    def skill_run(self, type, btn):
+        if type == 0:                # 단타 타입
+            self.monster_hp -= player.skillPower
+            self.txtCombatLog.append(player.skillMsg+"<span style='color: blue'>"+str(-player.skillPower)+"</span>")
+            self.update()
+        elif type == 1:              # 더블어택류 타입
+            self.btn.setText("활성화!!")
+        elif type == 2:              # 도트 데미지
+            pass
+        elif type == 3:              # 방어력 상승
+            self.btn.setText("활성화!!")
+        elif type == 4:              # 힐링
+            pass
 
-    def combat_skill3(self):
-        self.skill_timer = QTimer()
-        self.skill_timer.start()
-        self.skill_timer.setInterval(1000)
-        self.skill_timer.timeout.connect(self.skillTimer)
-        player.skill_01()
-        self.txtCombatLog.append(f"<span style='color: green'>{player.skillName}</span> 시전합니다!!")
-        self.btn_CombatSkill1.setText("활성화!!")
-    
     def skillTimer(self):
         self.initTimer += 1
         if self.initTimer == player.skillDuration:
             player.skill_00()
-            self.btn_CombatSkill1.setText("스킬1")
+            self.btn_reset()
 
     def combat_victory(self):
         self.combat_reset()
@@ -271,11 +251,21 @@ class CombatWindowClass(QWidget, widgetcombat_class):
             event.ignore()
 
     def combat_reset(self):
-        self.btn_CombatSkill1.setText(player.skill_01.skillName)
-        self.btn_CombatSkill2.setText(player.skill_02.skillName)
-        self.btn_CombatSkill3.setText("활성화!!")
         player.skill_00()      # 플레이어 스킬 초기화
+
+    def btn_reset(self):
+        self.btn_CombatSkill1.setText(player.skillName[1])
+        self.btn_CombatSkill2.setText(player.skillName[2])
+        self.btn_CombatSkill3.setText(player.skillName[3])
         
+    def update(self):
+        self.lbl_monsterhp.setText(str(self.monster_hp)+"/"+str(self.monster_init_hp))
+        self.lbl_playerhp.setText(str(player.stats[7])+"/"+str(player.stats[8]))
+        self.bar_monsterhp.setValue(self.monster_hp)
+        self.bar_monsterhp.setValue(self.monster_hp)
+        self.bar_playerhp.setValue(player.stats[7])
+        if self.monster_hp <= 0:
+                self.monster_num_sub()
 
 if __name__ == "__main__" :
     app = QApplication(sys.argv)   #QApplication : 프로그램을 실행시켜주는 클래스
