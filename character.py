@@ -23,10 +23,16 @@ class Player:
         self.skillCooldown = 0
         self.mulAttack = 1
     def skill_01(self):
-        self.skillName = "멀티어택"
+        self.skillName = "더블어택"
         self.skillDuration = 3
         self.skillCooldown = 3
         self.mulAttack = 2
+    def skill_02(self):
+        self.skillName = "트리플어택"
+        self.skillDuration = 3
+        self.skillCooldown = 3
+        self.mulAttack = 2
+
         combatSkill_02 = "승룡권"
         combatSkill_03 = "용권선풍각"
 
