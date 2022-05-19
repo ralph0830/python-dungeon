@@ -74,7 +74,7 @@ class Mase(NoClass):
         self.skillMsg = '도트 데미지 "파이어볼!!"'
         self.skillDuration = 4
         self.skillCooldown = 3
-        self.mulAttack = 1
+        self.skillDot = 2
     def skill_02(self):
         self.skillType = 0
         self.skillMsg = '전격 데미지 "라이트닝 볼트!!"'
