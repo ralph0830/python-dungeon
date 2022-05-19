@@ -9,8 +9,14 @@ class NoClass:
         self.skilldef = 1
         self.skillheal = 1
         self.skillDuration = 0
-        def levelup(self):
-            pass
+        self.skillCooldown = 0
+    def skill_0(self):
+        self.mulAttack = 1
+        self.skillPower = 1
+        self.skilldef = 1
+        self.skillheal = 1
+    def levelup(self):
+        pass
 
 class Warrior(NoClass):
     def __init__(self):
@@ -28,22 +34,18 @@ class Warrior(NoClass):
         self.stats[5] += 1
         self.stats[6] = 0
         self.stats[8] = self.stats[4] * 3
-    def skill_00(self):
-        self.skillDuration = 0
-        self.skillCooldown = 0
-        self.skillPower = self.stats[1]
-    def skill_01(self):
+    def skill_1(self):
         self.skillType = 0
         self.skillMsg = '무기를 높이 들어 강하게 내리칩니다!! "배쉬!!"'
         self.skillCooldown = 3
         self.skillPower = self.stats[1]
-    def skill_02(self):
+    def skill_2(self):
         self.skillType = 0
         self.skillMsg = '헛점을 노려 일격 "카운터!!"'
         self.skillDuration = 3
         self.skillCooldown = 3
         self.skillPower = self.stats[1]
-    def skill_03(self):
+    def skill_3(self):
         self.skillType = 3
         self.skillMsg = '전방에 방패 "가드!!"'
         self.skillDuration = 5
@@ -65,27 +67,24 @@ class Mase(NoClass):
         self.stats[5] += 1
         self.stats[6] = 0
         self.stats[8] = self.stats[4] * 3
-    def skill_00(self):
-        self.skillDuration = 0
-        self.skillCooldown = 0
-        self.mulAttack = 1
-    def skill_01(self):
+    def skill_1(self):
         self.skillType = 2
         self.skillMsg = '도트 데미지 "파이어볼!!"'
         self.skillDuration = 4
         self.skillCooldown = 3
         self.skillDot = 2
-    def skill_02(self):
+    def skill_2(self):
         self.skillType = 0
         self.skillMsg = '전격 데미지 "라이트닝 볼트!!"'
         self.skillDuration = 0
         self.skillCooldown = 3
-    def skill_03(self):
+        self.skillPower = self.stats[2]
+    def skill_3(self):
         self.skillType = 4
         self.skillMsg = '치료의 빛을 내린다 "힐링!!"'
         self.skillDuration = 0
         self.skillCooldown = 10
-        self.skillheal = self.stats[2]/5
+        self.skillheal = int(self.stats[2]/5)
 
 class Assasin(NoClass):
     def __init__(self):
@@ -103,24 +102,19 @@ class Assasin(NoClass):
         self.stats[5] += 2
         self.stats[6] = 0
         self.stats[8] = self.stats[4] * 3
-    def skill_00(self):
-        self.mulAttack = 1
-        self.skillPower = 1
-        self.skilldef = 1
-        self.skillheal = 1
-    def skill_01(self):
+    def skill_1(self):
         self.skillType = 1
         self.skillMsg = '쌍수 단검 "더블어택!!"'
         self.skillDuration = 2
         self.skillCooldown = 4
         self.mulAttack = 2
-    def skill_02(self):
+    def skill_2(self):
         self.skillType = 0
         self.skillMsg = '몰래 뒤로 돌아가 "백어택!!"'
         self.skillDuration = 0
         self.skillCooldown = 3
         self.skillPower = self.stats[3]
-    def skill_03(self):
+    def skill_3(self):
         self.skillType = 3
         self.skillMsg = '어둠 속에 몸을 가린다 "하이드!!"'
         self.skillDuration = 3
