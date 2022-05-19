@@ -93,9 +93,9 @@
          </property>
         </widget>
        </widget>
-       <widget class="QPushButton" name="btn_stat">
+       <widget class="QPushButton" name="btn_notyet">
         <property name="text">
-         <string>스탯</string>
+         <string>???</string>
         </property>
        </widget>
       </widget>
