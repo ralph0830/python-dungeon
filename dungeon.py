@@ -229,6 +229,7 @@ class CombatWindowClass(QWidget, widgetcombat_class):
             pass
         elif type == 2:              # 도트 데미지
             self.txtCombatLog.append("<span style='color: green'><b>"+player.skillMsg+"</span></b>")
+            self.txtCombatLog.append
             pass
         elif type == 3:              # 방어력 상승
             self.txtCombatLog.append("<span style='color: green'><b>"+player.skillMsg+"</span></b>")
@@ -243,6 +244,10 @@ class CombatWindowClass(QWidget, widgetcombat_class):
         print("player.skillCooldown", player.skillCooldown)
         if self.initTimer < player.skillDuration:
             btn.setText("활성화!!")
+            if player.skillType == 2:
+                self.monster_hp -= player.skillDot
+                self.txtCombatLog.append(f"{player.skillName[int(btn.objectName()[-1])]} 데미지 - {player.skillDot}")
+                self.update()
         elif self.initTimer == player.skillDuration:
             btn.setText("COOLDOWN")
             player.skill_00()
