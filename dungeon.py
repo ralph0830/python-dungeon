@@ -95,8 +95,7 @@ class WindowClass(QMainWindow, form_class):    #화면을 띄우는데 사용되
     def itemUse(self):
         dice_encounter = randint(0, 1)
         if dice_encounter == 1:
-            self.txtLog.append("물약을 사용하려 했으나 적이 공격해 옵니다!!")
-            CombatWindow.txtCombatLog.append("물약을 사용하려 했으나 적이 공격해 옵니다!!")
+            self.txtLog.append("\n"+"물약을 사용하려 했으나 적이 공격해 옵니다!!")
             self.encounterMonster()
         else:
             self.txtLog.append("물약을 사용하여, 체력을 회복합니다.\n")
@@ -109,8 +108,7 @@ class WindowClass(QMainWindow, form_class):    #화면을 띄우는데 사용되
     def encounterMonster(self):
         CombatWindow.show()
         self.hide()
-        CombatWindow.combat_start(True)
-        CombatWindow.spawning_monster()
+        CombatWindow.combat_start()
         CombatWindow.update()
 
     def closeEvent(self, event):
@@ -123,11 +121,6 @@ class WindowClass(QMainWindow, form_class):    #화면을 띄우는데 사용되
             event.ignore()
 
 class CombatWindowClass(QWidget, widgetcombat_class):
-    monster_hp = 0
-    monster_init_hp = 0
-    monster_name = ""
-    monster_num = 0
-    monster_speed = 1
 
     def __init__(self):
         super().__init__()
@@ -146,43 +139,36 @@ class CombatWindowClass(QWidget, widgetcombat_class):
         self.btn_CombatFlee.clicked.connect(self.combat_flee)
         self.bar_monsterhp.setMinimum(0)
         self.bar_playerhp.setMinimum(0)
+        self.timerCombat = QTimer()
+        self.timerSkill1 = QTimer()
+        self.timerSkill2 = QTimer()
+        self.timerSkill3 = QTimer()
 
-    def combat_start(self, CombatRunning=False):
-        if CombatRunning == True:
-            self.monster_num = self.monster_max_num = randint(1, 3)
-            self.combat_running = True
-            self.clicker_start()
-        else:
-            pass
+    def combat_start(self):
+        self.timerCombat.start()
+        self.timerCombat.timeout.connect(self.monster_attack)
+        self.monster_num = self.monster_max_num = randint(1, 3)
+        self.combat_running = True
+        self.spawning_monster()
 
     def spawning_monster(self):
         monsters = "코볼트", "고블린", "좀비", "구울"
         self.monster_name = choice(monsters)
         self.monster_speed = randint(1, 5)
+        self.lbl_MonsterSpeed.setText(str((self.monster_speed)))
         self.monster_hp = randint(1, 30)
         self.monster_init_hp = self.monster_hp
-
+        self.timerCombat.setInterval((6-self.monster_speed) * 1000)
         self.txtCombatLog.clear()
-        msgSpawning = f"{self.monster_name}가 나타납니다. <span style='color: red'>({self.monster_num}/{self.monster_max_num})</span>"
+        msgSpawning = f"\n{self.monster_name}가 나타납니다. <span style='color: red'>({self.monster_num}/{self.monster_max_num})</span>"
         myWindow.txtLog.append(msgSpawning)
         CombatWindow.txtCombatLog.append(msgSpawning)
-
         self.update()
-    
-    def clicker_start(self):
-        self.timer = QTimer()
-        if self.combat_running == True:
-            self.timer.start()
-            self.timer.setInterval((6-self.monster_speed) * 1000)
-            self.timer.timeout.connect(self.monster_attack)
-        else:
-            self.timer.stop()
 
     def monster_attack(self):
         self.monster_damage = randint(1, 3)
         player.stats[7] -= self.monster_damage 
         if player.stats[7] <= 0: player.stats[7] = 0 # - 수치를 0으로 바꿔줌
-        
         combatmsg2 = f"{self.monster_name}에게 <span style='color: red'><b> {str(self.monster_damage)}</span></b> 의 피해를 입습니다!!\n"
         # combatmsg2 = str(f"으악!! "+self.monster_name+"에게 "+"<p style='color: red'>"+str(self.monster_damage)+"</p>"+"의 피해를 입습니다!!\n")
         self.txtCombatLog.append(combatmsg2)
@@ -233,18 +219,18 @@ class CombatWindowClass(QWidget, widgetcombat_class):
     def skillTimer(self, skillno):
         btndict = {1:self.btn_CombatSkill1, 2:self.btn_CombatSkill2, 3:self.btn_CombatSkill3}
         btn = btndict[skillno]
-        if self.skill_timer1.interval() < player.skillDuration/1000:
+        if self.timerSkill1.interval() < player.skillDuration/1000:
             btn.setText("활성화!!")
             if player.skillType == 2:
                 self.monster_hp -= player.skillDot
                 self.txtCombatLog.append(f"{player.skillName[skillno]} 데미지 - {player.skillDot}")
                 self.update()
-        elif self.skill_timer1.interval() == player.skillDuration/1000:
+        elif self.timerSkill1.interval() == player.skillDuration/1000:
             btn.setText("COOLDOWN")
             player.skill_0()
-        elif self.skill_timer1.interval() >= (player.skillDuration + player.skillCooldown)/1000:
+        elif self.timerSkill1.interval() >= (player.skillDuration + player.skillCooldown)/1000:
             btn.setEnabled(True)
-            self.skill_timer1.stop()
+            self.timerSkill1.stop()
             self.btn_reset(skillno)
 
     def combat_victory(self):
@@ -264,7 +250,6 @@ class CombatWindowClass(QWidget, widgetcombat_class):
     def btn_reset(self, skillno):
         btndict = {1:self.btn_CombatSkill1, 2:self.btn_CombatSkill2, 3:self.btn_CombatSkill3}
         btn = btndict[skillno]
-        btn.setText(player.skillName[skillno])
         btn.setText(player.skillName[skillno])
         btn.setEnabled(True)
         
@@ -287,11 +272,10 @@ class CombatWindowClass(QWidget, widgetcombat_class):
             self.spawning_monster()
     
     def combat_end(self):
-        self.timer.stop()
-        self.skill_timer1.stop()
-        self.skill_timer2.stop()
-        self.skill_timer3.stop()
-        self.combat_running = False
+        self.timerCombat.stop()
+        self.timerSkill1.stop()
+        self.timerSkill2.stop()
+        self.timerSkill3.stop()
         self.hide()
         myWindow.show()
         myWindow.update_stats()
