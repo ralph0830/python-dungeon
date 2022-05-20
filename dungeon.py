@@ -5,7 +5,6 @@ from PyQt5 import uic
 from PyQt5.QtCore import QTimer
 from character import *
 import event
-from multitimer import *
 
 player = NoClass()
 
@@ -143,12 +142,17 @@ class CombatWindowClass(QWidget, widgetcombat_class):
         self.timerSkill1 = QTimer()
         self.timerSkill2 = QTimer()
         self.timerSkill3 = QTimer()
+        self.timerSkill1.setInterval(1000)
+        self.timerSkill2.setInterval(1000)
+        self.timerSkill3.setInterval(1000)
+        self.initTimer1 = 0
+        self.initTimer2 = 0
+        self.initTimer3 = 0
 
     def combat_start(self):
         self.timerCombat.start()
         self.timerCombat.timeout.connect(self.monster_attack)
         self.monster_num = self.monster_max_num = randint(1, 3)
-        self.combat_running = True
         self.spawning_monster()
 
     def spawning_monster(self):
@@ -178,7 +182,7 @@ class CombatWindowClass(QWidget, widgetcombat_class):
     def combat_attack(self):
         for x in range(0, player.mulAttack):
             player_damage = randint(int(player.stats[1] / 2 / 5), int(player.stats[1]/5))
-    
+
             self.monster_hp -= player_damage
             if self.monster_hp <= 0: self.monster_hp = 0 # - 수치를 0으로 바꿔줌
             if player.mulAttack >= 2:
@@ -190,10 +194,13 @@ class CombatWindowClass(QWidget, widgetcombat_class):
     
     def combat_skill(self, skillno):
         skilldict = {1:player.skill_1, 2:player.skill_2, 3:player.skill_3}
+        timerdict = {1:self.timerSkill1, 2:self.timerSkill2, 3:self.timerSkill3}
+        timer = timerdict[skillno]
         globals()["self.initTimer"+str(skillno)] = 0
         skilldict[skillno]()
-        MultiTimer(interval=1, function=lambda: self.skillTimer(skillno), count=(player.skillCooldown+player.skillDuration))
         self.skill_run(player.skillType)
+        timer.start()
+        timer.timeout.connect(lambda: self.skillTimer(skillno))
 
     def skill_run(self, type):
         if type == 0:                # 단타 타입
@@ -218,20 +225,23 @@ class CombatWindowClass(QWidget, widgetcombat_class):
 
     def skillTimer(self, skillno):
         btndict = {1:self.btn_CombatSkill1, 2:self.btn_CombatSkill2, 3:self.btn_CombatSkill3}
+        initdict = {1:self.initTimer1, 2:self.initTimer2, 3:self.initTimer3}
         btn = btndict[skillno]
-        if self.timerSkill1.interval() < player.skillDuration/1000:
+        initTimer = initdict[skillno]
+        if initTimer < player.skillDuration:
             btn.setText("활성화!!")
             if player.skillType == 2:
                 self.monster_hp -= player.skillDot
                 self.txtCombatLog.append(f"{player.skillName[skillno]} 데미지 - {player.skillDot}")
                 self.update()
-        elif self.timerSkill1.interval() == player.skillDuration/1000:
+        elif initTimer == player.skillDuration:
             btn.setText("COOLDOWN")
             player.skill_0()
-        elif self.timerSkill1.interval() >= (player.skillDuration + player.skillCooldown)/1000:
+        elif initTimer >= (player.skillDuration + player.skillCooldown):
             btn.setEnabled(True)
             self.timerSkill1.stop()
             self.btn_reset(skillno)
+        initTimer += 1
 
     def combat_victory(self):
         self.btn_reset(1)
@@ -276,6 +286,9 @@ class CombatWindowClass(QWidget, widgetcombat_class):
         self.timerSkill1.stop()
         self.timerSkill2.stop()
         self.timerSkill3.stop()
+        self.initTimer1 = 0
+        self.initTimer2 = 0
+        self.initTimer3 = 0
         self.hide()
         myWindow.show()
         myWindow.update_stats()
