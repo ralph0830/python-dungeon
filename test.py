@@ -1,40 +1,81 @@
-import sys
-from random import *
+import math, sys
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from PyQt5 import uic
-from PyQt5.QtCore import QTimer
 
-form_class = uic.loadUiType("test.ui")[0]
+class MainWindow(QMainWindow):
 
-class WindowClass(QMainWindow, form_class):    #화면을 띄우는데 사용되는 Class 선언
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-        self.initUI()
-                
-    def initUI(self):
-        self.lbl_01.setText("hello")
-        self.lbl_02.setText("hello")
-
-        self.timer1 = QTimer()
-        self.timer1.timeout.connect(self.printTime1)
-        self.timer1.start(100)
-        self.timer2 = QTimer()
-        self.timer2.timeout.connect(self.printTime2)
-        self.timer2.start(2000)
-        self.a = 0
-        self.b = 3
+    def __init__(self, parent = None):
     
-    def printTime1(self):
-        self.lbl_01.setText(str((self.a)))
-        self.a += 1
+        QMainWindow.__init__(self, parent)
+        
+        widget = QWidget(self)
+        self.editor = QTextEdit()
+        self.editor.setWordWrapMode(QTextOption.WrapAnywhere)
+        self.editor.setPlainText("https://kwonkyo.tistory.com  "*100)
+        layout = QGridLayout(widget)
+        layout.addWidget(self.editor, 0, 0, 1, 3)
+        button = QPushButton("Wait")
+        layout.addWidget(button, 1, 1, 1, 1)
+        
+        self.setCentralWidget(widget)
+        self.overlay = Overlay(self.centralWidget())
+        self.overlay.hide()
+        button.clicked.connect(self.overlay.show)
+    
+    def resizeEvent(self, event):
+    
+        self.overlay.resize(event.size())
+        event.accept()
 
-    def printTime2(self):
-        self.lbl_02.setText(str((self.b)))
-        self.b += 1
+class Overlay(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        palette = QPalette(self.palette())
+        palette.setColor(palette.Background, Qt.transparent)
+        self.setPalette(palette)
 
-if __name__ == "__main__" :
-    app = QApplication(sys.argv)   # QApplication : 프로그램을 실행시켜주는 클래스
-    myWindow = WindowClass()       # WindowClass의 인스턴스 생성
-    myWindow.show()                # 프로그램 화면을 보여주는 코드
-    app.exec_()                    # 프로그램을 이벤트루프로 진입시키는(프로그램을 작동시키는) 코드
+        self.cntPreset = 150
+        self.label = QLabel('000', self)
+        self.label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+    
+    def paintEvent(self, event):
+        painter = QPainter()
+        painter.begin(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(event.rect(), QBrush(QColor(255, 255, 255, 180)))
+
+        self.label.move(int(self.width()/2 -10), int(self.height()/2 -5))
+
+        painter.setPen(QPen(Qt.NoPen))
+        for i in range(14):
+            if (self.counter / 5) % 14 == i:
+                painter.setBrush(QBrush(QColor(127 + (self.counter % 5)*32, 0, 127)))
+            else:
+                painter.setBrush(QBrush(QColor(127, 127, 127)))
+            painter.drawEllipse(
+                self.width()/2 + 50 * math.cos(2 * math.pi * i / 14.0) - 5,
+                self.height()/2 + 50 * math.sin(2 * math.pi * i / 14.0) -10,
+                10, 10)
+        painter.end()
+
+    # 30 millisecond 간격으로 이벤트가 발생하는 타이머 설정
+    def showEvent(self, event):
+        self.timer = self.startTimer(30)
+        self.counter = 0
+    
+    # 타이머 콜백
+    def timerEvent(self, event):
+        self.counter += 1
+        self.update()
+        self.label.setText(str(self.cntPreset - self.counter))
+        if self.counter == self.cntPreset:  # 300번 호출되면
+            self.killTimer(self.timer)      # 타이머 종료하고
+            self.hide()                     # 오버레이 숨기기
+
+if __name__ == "__main__":
+
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())

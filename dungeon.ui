@@ -51,7 +51,7 @@
      <bool>false</bool>
     </property>
     <property name="text">
-     <string>스탯 버튼을 누르세요</string>
+     <string>캐릭터를 선택해주세요</string>
     </property>
     <property name="scaledContents">
      <bool>false</bool>
